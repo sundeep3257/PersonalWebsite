@@ -12,13 +12,26 @@ document.addEventListener('DOMContentLoaded', function() {
         
         let currentIndex = 0;
         const maxIndex = Math.max(0, cards.length - 1);
+        let userHasInteracted = false; // Track if user has interacted with carousel
         
         function updateCarousel() {
-            // Use native scroll with scroll-snap
+            // Use track.scrollTo to only scroll horizontally, preventing page scroll
             const card = cards[currentIndex];
-            if (card) {
-                // Scroll to the card using scrollIntoView for proper snap alignment
-                card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+            if (card && track) {
+                // Calculate the scroll position to center the card
+                const cardRect = card.getBoundingClientRect();
+                const trackRect = track.getBoundingClientRect();
+                const scrollLeft = track.scrollLeft;
+                const cardLeft = cardRect.left - trackRect.left + scrollLeft;
+                const cardWidth = cardRect.width;
+                const trackWidth = trackRect.width;
+                const targetScroll = cardLeft - (trackWidth / 2) + (cardWidth / 2);
+                
+                // Only scroll the track horizontally, not the page
+                track.scrollTo({
+                    left: targetScroll,
+                    behavior: 'smooth'
+                });
             }
             
             // Update button states
@@ -46,7 +59,14 @@ document.addEventListener('DOMContentLoaded', function() {
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
                 resizeCards();
-                updateCarousel();
+                // Only update carousel position on resize if user has interacted with it
+                // This prevents unwanted page scrolling when window is resized/zoomed
+                if (userHasInteracted) {
+                    updateCarousel();
+                } else {
+                    // Just update the index based on current scroll position
+                    updateIndexFromScroll();
+                }
             }, 100);
         });
         
@@ -78,6 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
             prevBtn.addEventListener('click', function() {
                 if (currentIndex > 0) {
                     currentIndex--;
+                    userHasInteracted = true;
                     updateCarousel();
                 }
             });
@@ -88,13 +109,17 @@ document.addEventListener('DOMContentLoaded', function() {
             nextBtn.addEventListener('click', function() {
                 if (currentIndex < maxIndex) {
                     currentIndex++;
+                    userHasInteracted = true;
                     updateCarousel();
                 }
             });
         }
         
         // Update index when user scrolls manually
-        track.addEventListener('scroll', updateIndexFromScroll);
+        track.addEventListener('scroll', function() {
+            userHasInteracted = true;
+            updateIndexFromScroll();
+        });
         
         // Initialize - but don't call updateCarousel immediately to avoid page scroll
         // updateCarousel will be called when user interacts with carousel
