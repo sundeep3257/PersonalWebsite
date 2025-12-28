@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file, send_from_directory
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
-from models import db, Project, ProjectImage, Publication, Experience, ProjectCategory, AboutPage
+from models import db, Project, ProjectImage, Publication, Experience, ProjectCategory, AboutPage, CV
 from config import Config
 import os
 import re
@@ -142,7 +142,31 @@ and cutting-edge technology to improve patient care."""
 @app.route('/download-cv')
 def download_cv():
     """Download CV file"""
-    return send_file('graphics/my_cv.pdf', as_attachment=True, download_name='CV_Sundeep_Chakladar.pdf')
+    cv = CV.query.first()
+    if cv:
+        # Handle both graphics/ and uploads/ paths
+        if cv.file_path.startswith('graphics/'):
+            # Graphics folder is at root level
+            file_path = cv.file_path
+        elif cv.file_path.startswith('uploads/'):
+            # Uploads are in static/uploads
+            file_path = os.path.join('static', cv.file_path)
+        else:
+            # Assume it's a relative path from root
+            file_path = cv.file_path
+        
+        # Check if file exists and send it
+        if os.path.exists(file_path):
+            return send_file(file_path, as_attachment=True, download_name=cv.download_name)
+    
+    # Fallback to default if no CV in database or file not found
+    default_path = 'graphics/my_cv.pdf'
+    if os.path.exists(default_path):
+        return send_file(default_path, as_attachment=True, download_name='CV_Sundeep_Chakladar.pdf')
+    else:
+        # If default also doesn't exist, return 404
+        from flask import abort
+        abort(404)
 
 @app.route('/graphics/<path:filename>')
 def serve_graphics(filename):
@@ -495,6 +519,69 @@ and cutting-edge technology to improve patient care."""
         content = about_page.content
     
     return render_template('admin/about/form.html', content=content)
+
+# ==================== ADMIN: CV MANAGEMENT ====================
+
+@app.route('/admin/cv/edit', methods=['GET', 'POST'])
+@require_admin
+def admin_cv_edit():
+    """Edit CV file and download name"""
+    cv = CV.query.first()
+    
+    if request.method == 'POST':
+        download_name = request.form.get('download_name', '').strip()
+        
+        if not download_name:
+            flash('Download name is required.', 'error')
+            return render_template('admin/cv/form.html', cv=cv)
+        
+        # Ensure download name ends with .pdf
+        if not download_name.lower().endswith('.pdf'):
+            download_name += '.pdf'
+        
+        # Handle file upload
+        file_path = None
+        if 'cv_file' in request.files:
+            file = request.files['cv_file']
+            if file and file.filename:
+                # Check if it's a PDF
+                if not file.filename.lower().endswith('.pdf'):
+                    flash('Only PDF files are allowed.', 'error')
+                    return render_template('admin/cv/form.html', cv=cv)
+                
+                # Save the file
+                filename = secure_filename(file.filename)
+                filename = f"cv-{datetime.now().strftime('%Y%m%d%H%M%S')}-{filename}"
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                file_path = f"uploads/{filename}"
+        
+        # Update or create CV record
+        if cv:
+            if file_path:
+                # Delete old file if it's in uploads/ (not graphics/)
+                if cv.file_path.startswith('uploads/'):
+                    old_file_path = os.path.join('static', cv.file_path)
+                    if os.path.exists(old_file_path):
+                        try:
+                            os.remove(old_file_path)
+                        except:
+                            pass  # Ignore errors when deleting old file
+                cv.file_path = file_path
+            cv.download_name = download_name
+            cv.updated_at = datetime.utcnow()
+        else:
+            # Use existing file path if no new file uploaded, otherwise use default
+            if not file_path:
+                file_path = 'graphics/my_cv.pdf'
+            cv = CV(file_path=file_path, download_name=download_name)
+            db.session.add(cv)
+        
+        db.session.commit()
+        flash('CV updated successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))
+    
+    return render_template('admin/cv/form.html', cv=cv)
 
 # ==================== INITIALIZATION ====================
 
