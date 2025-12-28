@@ -77,3 +77,14 @@ class AboutPage(db.Model):
     def __repr__(self):
         return f'<AboutPage {self.id}>'
 
+class CV(db.Model):
+    __tablename__ = 'cv'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    file_path = db.Column(db.String(500), nullable=False)
+    download_name = db.Column(db.String(200), nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<CV {self.download_name}>'
+
