@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Edit About Page - Admin{% endblock %}
+
+{% block content %}
+<section class="admin-section">
+    <div class="container">
+        <div class="admin-header">
+            <h1 class="admin-title">Edit About Page</h1>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn-secondary">← Back to Dashboard</a>
+        </div>
+
+        <form method="POST" class="admin-form" action="{{ url_for('admin_about_edit') }}">
+            <div class="form-group">
+                <label for="content" class="form-label">About Page Content *</label>
+                <textarea id="content" name="content" class="form-input" rows="15" required>{{ content }}</textarea>
+                <small style="display: block; margin-top: 0.5rem; color: rgba(255, 255, 255, 0.7);">
+                    Separate paragraphs with a blank line (double newline). Each paragraph will be displayed as a separate &lt;p&gt; tag.
+                </small>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Save About Page</button>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn-secondary">Cancel</a>
+            </div>
+        </form>
+
+        <div class="preview-section" style="margin-top: 2rem;">
+            <h3>Preview</h3>
+            <div class="preview-box">
+                <a href="{{ url_for('about') }}" target="_blank" class="btn-secondary">View Live Page →</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

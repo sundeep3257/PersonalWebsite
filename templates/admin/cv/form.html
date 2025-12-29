@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Manage CV - Admin{% endblock %}
+
+{% block content %}
+<section class="admin-section">
+    <div class="container">
+        <div class="admin-header">
+            <h1 class="admin-title">Manage CV</h1>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn-secondary">← Back to Dashboard</a>
+        </div>
+
+        <form method="POST" class="admin-form" enctype="multipart/form-data" action="{{ url_for('admin_cv_edit') }}">
+            <div class="form-group">
+                <label for="download_name" class="form-label">Download Filename *</label>
+                <input type="text" id="download_name" name="download_name" class="form-input" 
+                       value="{{ cv.download_name if cv else 'CV_Sundeep_Chakladar.pdf' }}" 
+                       placeholder="CV_Sundeep_Chakladar.pdf" required>
+                <small style="display: block; margin-top: 0.5rem; color: rgba(255, 255, 255, 0.7);">
+                    This is the name that will be used when users download the CV. Include .pdf extension.
+                </small>
+            </div>
+
+            <div class="form-group">
+                <label for="cv_file" class="form-label">CV PDF File</label>
+                <input type="file" id="cv_file" name="cv_file" class="form-input" accept=".pdf">
+                <small style="display: block; margin-top: 0.5rem; color: rgba(255, 255, 255, 0.7);">
+                    {% if cv %}
+                        Current file: {{ cv.file_path }}<br>
+                    {% endif %}
+                    Upload a new PDF file to replace the current CV. Leave empty to keep the current file.
+                </small>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Save CV Settings</button>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn-secondary">Cancel</a>
+            </div>
+        </form>
+
+        <div class="preview-section" style="margin-top: 2rem;">
+            <h3 style="color: var(--text-white); margin-bottom: 1rem;">Preview</h3>
+            <div class="preview-box">
+                <a href="{{ url_for('download_cv') }}" target="_blank" class="btn-secondary">Test Download CV →</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

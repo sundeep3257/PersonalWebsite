@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Experiences - Admin{% endblock %}
+
+{% block content %}
+<section class="admin-section">
+    <div class="container">
+        <div class="admin-header">
+            <h1 class="admin-title">Manage Experiences</h1>
+            <div class="admin-actions">
+                <a href="{{ url_for('admin_dashboard') }}" class="btn-secondary">← Back to Dashboard</a>
+                <a href="{{ url_for('admin_experience_new') }}" class="btn-primary">+ New Experience</a>
+            </div>
+        </div>
+
+        <div class="admin-table-container">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for experience in experiences %}
+                    <tr>
+                        <td>{{ experience.title }}</td>
+                        <td>{{ experience.description[:100] }}{% if experience.description|length > 100 %}...{% endif %}</td>
+                        <td>{{ experience.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td class="action-buttons">
+                            <a href="{{ url_for('admin_experience_edit', exp_id=experience.id) }}" class="btn-small">Edit</a>
+                            <form method="POST" action="{{ url_for('admin_experience_delete', exp_id=experience.id) }}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this experience?');">
+                                <button type="submit" class="btn-small btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="empty-state">No experiences found. <a href="{{ url_for('admin_experience_new') }}">Create one</a>.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
