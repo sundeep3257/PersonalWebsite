@@ -64,8 +64,8 @@ def index():
     except:
         pass  # Database might already exist
     
-    projects_medicine = Project.query.filter_by(category=ProjectCategory.MEDICINE).all()
-    projects_creative = Project.query.filter_by(category=ProjectCategory.CREATIVE).all()
+    projects_medicine = Project.query.filter_by(category=ProjectCategory.MEDICINE).order_by(Project.created_at.desc()).all()
+    projects_creative = Project.query.filter_by(category=ProjectCategory.CREATIVE).order_by(Project.created_at.desc()).all()
     publications = Publication.query.order_by(Publication.publication_date.desc()).all()
     experiences = Experience.query.all()
     
@@ -601,4 +601,5 @@ if __name__ == '__main__':
     # Only run in debug mode if not in production
     debug = os.environ.get('FLASK_ENV') != 'production'
     app.run(host='0.0.0.0', port=port, debug=debug)
+
 
